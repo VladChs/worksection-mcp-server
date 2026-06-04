@@ -25,7 +25,7 @@ Returns: List of members with id, email, name, online status, and role.`,
       },
     },
     async () => {
-      const response = await client.get<WorksectionMember[]>("get_members");
+      const response = await client.get<WorksectionMember[]>("get_users");
 
       const members = response.data;
       if (!members || members.length === 0) {

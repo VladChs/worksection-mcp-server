@@ -64,12 +64,14 @@ Returns: List of tags with id and name.`,
 
 Args:
   - id_task (string, required): Task ID
-  - tags (string, required): Comma-separated tag names or IDs
+  - tags (string, required): Comma-separated tag names or IDs to add
+  - remove (string, optional): Comma-separated tag names or IDs to remove
 
 Returns: Confirmation.`,
       inputSchema: {
         id_task: z.string().describe("Task ID"),
-        tags: z.string().describe("Comma-separated tag names or IDs"),
+        tags: z.string().describe("Comma-separated tag names or IDs to add"),
+        remove: z.string().optional().describe("Comma-separated tag names or IDs to remove"),
       },
       annotations: {
         readOnlyHint: false,
@@ -80,9 +82,9 @@ Returns: Confirmation.`,
     },
     async (params) => {
       await client.post<unknown>(
-        "set_tags",
+        "update_task_tags",
         { id_task: params.id_task },
-        { tags: params.tags }
+        { plus: params.tags, minus: params.remove }
       );
 
       return {

@@ -1,8 +1,37 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createClientFromEnv } from "./services/client.js";
+
+/**
+ * Load .env.local / .env from the project root (next to dist/), so the
+ * server is self-contained and MCP clients don't need to pass env vars.
+ * Explicit environment variables always take precedence.
+ */
+function loadEnvFile(): void {
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  for (const name of [".env.local", ".env"]) {
+    let content: string;
+    try {
+      content = readFileSync(resolve(root, name), "utf8");
+    } catch {
+      continue;
+    }
+    for (const line of content.split("\n")) {
+      const match = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/);
+      if (match && !(match[1] in process.env)) {
+        process.env[match[1]] = match[2].replace(/^["']|["']$/g, "");
+      }
+    }
+    return; // first file found wins
+  }
+}
+
+loadEnvFile();
 import { registerProjectTools } from "./tools/projects.js";
 import { registerTaskTools } from "./tools/tasks.js";
 import { registerCommentTools } from "./tools/comments.js";

@@ -113,7 +113,8 @@ If you prefer not to use `.env.local`, you can still pass the variables through 
 ```json
 "env": {
   "WORKSECTION_URL": "https://yourcompany.worksection.com",
-  "WORKSECTION_API_KEY": "your_api_key_here"
+  "WORKSECTION_API_KEY": "your_api_key_here",
+  "WORKSECTION_DEFAULT_USER_EMAIL": "you@yourcompany.com"
 }
 ```
 

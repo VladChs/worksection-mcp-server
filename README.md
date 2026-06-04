@@ -29,19 +29,19 @@ Lets AI assistants like Claude interact with your Worksection account through na
 
 ```bash
 # 1. Install
-git clone https://github.com/novgorodskii/worksection-mcp-server.git
+git clone https://github.com/VladChs/worksection-mcp-server.git
 cd worksection-mcp-server
 npm install && npm run build
 
-# 2. Configure env vars
-export WORKSECTION_URL=https://yourcompany.worksection.com
-export WORKSECTION_API_KEY=your_api_key_here
+# 2. Configure credentials (loaded automatically at startup)
+cp .env.example .env.local
+# edit .env.local and fill in your values
 
 # 3. Run
 node dist/index.js
 ```
 
-Get your API key in Worksection: **Account → API → Show API key** (only the account owner has access).
+Get your API key in Worksection: **Administration → API → Apps → Create** (new interface) or **Account → API → Show API key** (legacy interface). Only the account owner has access.
 
 ---
 
@@ -55,7 +55,7 @@ Get your API key in Worksection: **Account → API → Show API key** (only the 
 ### From source
 
 ```bash
-git clone https://github.com/novgorodskii/worksection-mcp-server.git
+git clone https://github.com/VladChs/worksection-mcp-server.git
 cd worksection-mcp-server
 npm install
 npm run build
@@ -63,16 +63,19 @@ npm run build
 
 ### Environment variables
 
-Set these in your shell or create a `.env` file (see `.env.example`):
+The server automatically loads `.env.local` (preferred, gitignored) or `.env` from the project root at startup — copy `.env.example` to get started. Variables passed by the MCP client or shell take precedence over the file.
 
-| Variable | Description |
-|---|---|
-| `WORKSECTION_URL` | Your Worksection URL (e.g. `https://yourcompany.worksection.com`) |
-| `WORKSECTION_API_KEY` | Admin API key from Worksection settings |
+| Variable | Required | Description |
+|---|---|---|
+| `WORKSECTION_URL` | yes | Your Worksection URL (e.g. `https://yourcompany.worksection.com`) |
+| `WORKSECTION_API_KEY` | yes | Admin API key from Worksection settings |
+| `WORKSECTION_DEFAULT_USER_EMAIL` | no | Default author email for created tasks, projects, and comments. Without it, actions are attributed to the API key owner. An explicit `email_user_from` argument always wins. |
 
 ---
 
 ## Configuration
+
+With credentials in `.env.local`, client configs only need the command — no secrets in JSON files.
 
 ### Claude Desktop
 
@@ -83,11 +86,7 @@ Add to `claude_desktop_config.json`:
   "mcpServers": {
     "worksection": {
       "command": "node",
-      "args": ["/path/to/worksection-mcp-server/dist/index.js"],
-      "env": {
-        "WORKSECTION_URL": "https://yourcompany.worksection.com",
-        "WORKSECTION_API_KEY": "your_api_key_here"
-      }
+      "args": ["/path/to/worksection-mcp-server/dist/index.js"]
     }
   }
 }
@@ -96,17 +95,26 @@ Add to `claude_desktop_config.json`:
 ### Claude Code
 
 ```bash
-claude mcp add worksection -- node /path/to/worksection-mcp-server/dist/index.js
+claude mcp add worksection -s user -- node /path/to/worksection-mcp-server/dist/index.js
 ```
 
-Make sure `WORKSECTION_URL` and `WORKSECTION_API_KEY` are set in your shell environment.
+(`-s user` makes the server available in all your projects; omit it for project-only scope.)
 
 ### Direct execution
 
 ```bash
-WORKSECTION_URL=https://yourcompany.worksection.com \
-WORKSECTION_API_KEY=your_key \
 node dist/index.js
+```
+
+### Without an env file
+
+If you prefer not to use `.env.local`, you can still pass the variables through the client config's `"env"` block or your shell environment — they take precedence over the file:
+
+```json
+"env": {
+  "WORKSECTION_URL": "https://yourcompany.worksection.com",
+  "WORKSECTION_API_KEY": "your_api_key_here"
+}
 ```
 
 ---
@@ -172,7 +180,7 @@ The server exposes **21 tools** across 5 categories.
 | Tool | Description |
 |---|---|
 | `worksection_get_tags` | List available tags/labels |
-| `worksection_set_task_tags` | Set tags on a task |
+| `worksection_set_task_tags` | Add tags to a task (and optionally remove others) |
 
 </details>
 
@@ -183,10 +191,15 @@ The server exposes **21 tools** across 5 categories.
 This server uses the **Admin Token** authentication method:
 
 - Generates an MD5 hash from query parameters + API key
-- Provides full access to all account data
+- Provides full access to all account data (or the scopes selected when creating the App)
 - Only the account owner can generate the API key
+- API keys created via the new **Administration → API → Apps** interface work with this method too
 
 For per-user access, see the [Worksection OAuth 2.0 docs](https://worksection.com/en/faq/oauth.html).
+
+### Action authorship
+
+Actions performed through the admin API are attributed to the API key owner by default. To attribute created tasks, projects, and comments to a specific user, set `WORKSECTION_DEFAULT_USER_EMAIL` or pass `email_user_from` per call.
 
 ---
 

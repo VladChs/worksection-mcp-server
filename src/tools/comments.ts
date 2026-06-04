@@ -9,7 +9,8 @@ import {
 
 export function registerCommentTools(
   server: McpServer,
-  client: WorksectionClient
+  client: WorksectionClient,
+  defaultUserEmail?: string
 ): void {
   // ─── get_comments ───
   server.registerTool(
@@ -75,7 +76,7 @@ Args:
   - id_task (string, required): Task ID to comment on
   - text (string, required): Comment text content
   - todo (string, optional): Checklist items, one per line (creates checkboxes in the comment)
-  - email_user_from (string, optional): Email of the comment author (defaults to API key owner)
+  - email_user_from (string, optional): Email of the comment author (defaults to WORKSECTION_DEFAULT_USER_EMAIL env var if set, otherwise the API key owner)
 
 Returns: Created comment data.`,
       inputSchema: {
@@ -103,7 +104,10 @@ Returns: Created comment data.`,
       const response = await client.post<WorksectionComment>(
         "post_comment",
         { id_task },
-        bodyParams as Record<string, string | undefined>
+        {
+          ...bodyParams,
+          email_user_from: params.email_user_from ?? defaultUserEmail,
+        } as Record<string, string | undefined>
       );
 
       return {

@@ -9,7 +9,8 @@ import {
 
 export function registerTaskTools(
   server: McpServer,
-  client: WorksectionClient
+  client: WorksectionClient,
+  defaultUserEmail?: string
 ): void {
   // ─── get_all_tasks ───
   server.registerTool(
@@ -166,7 +167,7 @@ Args:
   - title (string, required): Task name
   - id_parent (string, optional): Parent task ID to create as a subtask
   - email_user_to (string, optional): Assignee email
-  - email_user_from (string, optional): Creator email
+  - email_user_from (string, optional): Creator email (defaults to WORKSECTION_DEFAULT_USER_EMAIL env var if set, otherwise the API key owner)
   - text (string, optional): Task description
   - priority (string, optional): Priority 0-10 (0=lowest, 10=highest)
   - date_start (string, optional): Start date YYYY-MM-DD
@@ -205,7 +206,10 @@ Returns: Created task data with ID.`,
           id_project,
           ...(id_parent ? { id_parent } : {}),
         },
-        bodyParams as Record<string, string | undefined>
+        {
+          ...bodyParams,
+          email_user_from: params.email_user_from ?? defaultUserEmail,
+        } as Record<string, string | undefined>
       );
 
       return {

@@ -9,7 +9,8 @@ import {
 
 export function registerProjectTools(
   server: McpServer,
-  client: WorksectionClient
+  client: WorksectionClient,
+  defaultUserEmail?: string
 ): void {
   // ─── get_projects ───
   server.registerTool(
@@ -122,7 +123,7 @@ Returns: Project details including name, status, dates, team members, settings.`
 Args:
   - title (string, required): Project name
   - email_manager (string, optional): Email of the project manager
-  - email_user_from (string, optional): Email of the project creator
+  - email_user_from (string, optional): Email of the project creator (defaults to WORKSECTION_DEFAULT_USER_EMAIL env var if set, otherwise the API key owner)
   - text (string, optional): Project description
   - date_start (string, optional): Start date in YYYY-MM-DD format
   - date_end (string, optional): Due date in YYYY-MM-DD format
@@ -159,7 +160,7 @@ Returns: Created project data with ID.`,
       const response = await client.post<WorksectionProject>("post_project", {}, {
         title: params.title,
         email_manager: params.email_manager,
-        email_user_from: params.email_user_from,
+        email_user_from: params.email_user_from ?? defaultUserEmail,
         text: params.text,
         date_start: params.date_start,
         date_end: params.date_end,

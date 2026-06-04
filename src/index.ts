@@ -12,15 +12,19 @@ import { registerTagTools } from "./tools/tags.js";
 async function main(): Promise<void> {
   const client = createClientFromEnv();
 
+  // Optional: default author email for created tasks/projects/comments.
+  // Without it, the Worksection API attributes actions to the API key owner.
+  const defaultUserEmail = process.env.WORKSECTION_DEFAULT_USER_EMAIL;
+
   const server = new McpServer({
     name: "worksection-mcp-server",
     version: "1.0.0",
   });
 
   // Register all tool groups
-  registerProjectTools(server, client);
-  registerTaskTools(server, client);
-  registerCommentTools(server, client);
+  registerProjectTools(server, client, defaultUserEmail);
+  registerTaskTools(server, client, defaultUserEmail);
+  registerCommentTools(server, client, defaultUserEmail);
   registerMemberTools(server, client);
   registerTagTools(server, client);
 
